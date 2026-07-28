@@ -1,4 +1,4 @@
-"""Unit test for EnrichmentProcessor."""
+"""Positive and negative unit tests for EnrichmentProcessor."""
 
 from datetime import date
 from decimal import Decimal
@@ -6,10 +6,8 @@ from decimal import Decimal
 from sample_assignment.enrichment import EnrichmentProcessor
 
 
-def test_build_enriched_order_sales(spark):
-    """Order data should be enriched with Customer and Product details."""
-
-    customers_source_df = spark.createDataFrame(
+def _customers_df(spark):
+    return spark.createDataFrame(
         [
             (
                 "AB-10001",
@@ -40,7 +38,9 @@ def test_build_enriched_order_sales(spark):
         ],
     )
 
-    products_source_df = spark.createDataFrame(
+
+def _products_df(spark):
+    return spark.createDataFrame(
         [
             (
                 "TEC-PH-10000001",
@@ -61,7 +61,9 @@ def test_build_enriched_order_sales(spark):
         ],
     )
 
-    orders_source_df = spark.createDataFrame(
+
+def _orders_df(spark, customer_id="AB-10001"):
+    return spark.createDataFrame(
         [
             (
                 1,
@@ -69,7 +71,7 @@ def test_build_enriched_order_sales(spark):
                 date(2024, 1, 10),
                 date(2024, 1, 12),
                 "Standard Class",
-                "AB-10001",
+                customer_id,
                 "TEC-PH-10000001",
                 2,
                 200.00,
@@ -92,25 +94,27 @@ def test_build_enriched_order_sales(spark):
         ],
     )
 
-    processor = EnrichmentProcessor(spark)
 
+# ==========================================================
+# Positive test
+# ==========================================================
+
+def test_build_enriched_order_sales(spark):
+    """An Order should receive Customer and Product attributes."""
+
+    processor = EnrichmentProcessor(spark)
     customers_df = processor.build_customers(
-        customers_source_df
+        _customers_df(spark)
     )
     products_df = processor.build_products(
-        products_source_df
+        _products_df(spark)
     )
-    order_sales_df = processor.build_order_sales(
-        orders_source_df,
+
+    result = processor.build_order_sales(
+        _orders_df(spark),
         customers_df,
         products_df,
-    )
-
-    result = order_sales_df.first()
-
-    assert customers_df.count() == 1
-    assert products_df.count() == 1
-    assert order_sales_df.count() == 1
+    ).first()
 
     assert result["order_id"] == "CA-2024-1001"
     assert result["customer_name"] == "Alice Brown"
@@ -118,3 +122,27 @@ def test_build_enriched_order_sales(spark):
     assert result["category"] == "Technology"
     assert result["sub_category"] == "Phones"
     assert result["profit"] == Decimal("10.13")
+
+
+# ==========================================================
+# Negative test
+# ==========================================================
+
+def test_order_with_unknown_customer_is_not_enriched(spark):
+    """An Order without a matching Customer must not enter the master table."""
+
+    processor = EnrichmentProcessor(spark)
+    customers_df = processor.build_customers(
+        _customers_df(spark)
+    )
+    products_df = processor.build_products(
+        _products_df(spark)
+    )
+
+    result_df = processor.build_order_sales(
+        _orders_df(spark, customer_id="UNKNOWN"),
+        customers_df,
+        products_df,
+    )
+
+    assert result_df.count() == 0

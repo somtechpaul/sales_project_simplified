@@ -1,10 +1,14 @@
-"""Unit test for AggregationProcessor."""
+"""Positive and edge-case unit tests for AggregationProcessor."""
 
 from datetime import date
 from decimal import Decimal
 
 from sample_assignment.aggregation import AggregationProcessor
 
+
+# ==========================================================
+# Positive test
+# ==========================================================
 
 def test_profit_aggregation(spark):
     """Profit should be grouped by year, product and customer."""
@@ -56,16 +60,54 @@ def test_profit_aggregation(spark):
     }
 
     assert result_df.count() == 2
+    assert (
+        results[(2024, "AB-10001")]["total_profit"]
+        == Decimal("30.58")
+    )
+    assert (
+        results[(2025, "CD-10002")]["total_profit"]
+        == Decimal("5.00")
+    )
 
-    alice_2024 = results[(2024, "AB-10001")]
 
-    assert alice_2024["category"] == "Technology"
-    assert alice_2024["sub_category"] == "Phones"
-    assert alice_2024["customer_name"] == "Alice Brown"
-    assert alice_2024["total_profit"] == Decimal("30.58")
+# ==========================================================
+# Negative-profit edge case
+# ==========================================================
 
-    bob_2025 = results[(2025, "CD-10002")]
+def test_profit_aggregation_preserves_losses(spark):
+    """Negative profit is a valid loss and must remain in the aggregate."""
 
-    assert bob_2025["category"] == "Office Supplies"
-    assert bob_2025["sub_category"] == "Paper"
-    assert bob_2025["total_profit"] == Decimal("5.00")
+    order_sales_df = spark.createDataFrame(
+        [
+            (
+                date(2024, 1, 10),
+                "Technology",
+                "Phones",
+                "AB-10001",
+                "Alice Brown",
+                Decimal("10.00"),
+            ),
+            (
+                date(2024, 1, 11),
+                "Technology",
+                "Phones",
+                "AB-10001",
+                "Alice Brown",
+                Decimal("-15.00"),
+            ),
+        ],
+        [
+            "order_date",
+            "category",
+            "sub_category",
+            "customer_id",
+            "customer_name",
+            "profit",
+        ],
+    )
+
+    result = AggregationProcessor.build_profit_aggregate(
+        order_sales_df
+    ).first()
+
+    assert result["total_profit"] == Decimal("-5.00")

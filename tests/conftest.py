@@ -1,4 +1,4 @@
-"""Common pytest setup."""
+"""Common pytest setup for the retail sales unit tests."""
 
 import sys
 from pathlib import Path
@@ -15,7 +15,7 @@ if str(SRC_PATH) not in sys.path:
 
 @pytest.fixture(scope="session")
 def spark():
-    """Provide one Spark session for all tests."""
+    """Provide one Spark session for the complete test session."""
 
     session = SparkSession.getActiveSession()
 
@@ -23,6 +23,7 @@ def spark():
         session = (
             SparkSession.builder
             .appName("retail-sales-tests")
+            .master("local[2]")
             .getOrCreate()
         )
 
