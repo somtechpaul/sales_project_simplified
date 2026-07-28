@@ -136,39 +136,39 @@ class RawDataIngestion:
     # Read Customer.xlsx
     # ======================================================
 
-    # def read_customers(self) -> DataFrame:
-    #     """Read Customer.xlsx from its first worksheet."""
+    def read_customers(self) -> DataFrame:
+        """Read Customer.xlsx from its first worksheet."""
 
-    #     file_name = "Customer.xlsx"
+        file_name = "Customer.xlsx"
 
-    #     file_path = (
-    #         f"{self.volume_path}/customers_volume_new/{file_name}"
-    #     )
+        file_path = (
+            f"{self.volume_path}/customers_volume_new/{file_name}"
+        )
 
-    #     customer_df = (
-    #         self.spark.read
-    #         .format("dev.mauch.spark.excel")
-    #         .option("header", "true")
-    #         .option(
-    #             "dataAddress",
-    #             "'Worksheet'!A1",
-    #         )
-    #         .option(
-    #             "treatEmptyValuesAsNulls",
-    #             "true",
-    #         )
-    #         .option(
-    #             "usePlainNumberFormat",
-    #             "true",
-    #         )
-    #         .schema(CUSTOMER_SCHEMA)
-    #         .load(file_path)
-    #     )
+        customer_df = (
+            self.spark.read
+            .format("dev.mauch.spark.excel")
+            .option("header", "true")
+            .option(
+                "dataAddress",
+                "'Worksheet'!A1",
+            )
+            .option(
+                "treatEmptyValuesAsNulls",
+                "true",
+            )
+            .option(
+                "usePlainNumberFormat",
+                "true",
+            )
+            .schema(CUSTOMER_SCHEMA)
+            .load(file_path)
+        )
 
-    #     return self._prepare(
-    #         df=customer_df,
-    #         source_file_name=file_name,
-    #     )
+        return self._prepare(
+            df=customer_df,
+            source_file_name=file_name,
+        )
 
     # ======================================================
     # Read Products.csv
@@ -259,11 +259,11 @@ class RawDataIngestion:
         """Ingest customer, product and order files."""
 
         sources = [
-            # (
-            #     "customers",
-            #     self.read_customers,
-            #     f"{self.catalog}.raw.customers",
-            # ),
+            (
+                "customers",
+                self.read_customers,
+                f"{self.catalog}.raw.customers",
+            ),
             (
                 "products",
                 self.read_products,

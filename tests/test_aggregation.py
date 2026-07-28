@@ -17,7 +17,7 @@ def test_profit_aggregation(spark):
                 "Phones",
                 "AB-10001",
                 "Alice Brown",
-                10.126,
+                Decimal("10.13"),
             ),
             (
                 date(2024, 2, 15),
@@ -25,7 +25,7 @@ def test_profit_aggregation(spark):
                 "Phones",
                 "AB-10001",
                 "Alice Brown",
-                20.445,
+                Decimal("20.45"),
             ),
             (
                 date(2025, 3, 20),
@@ -33,7 +33,7 @@ def test_profit_aggregation(spark):
                 "Paper",
                 "CD-10002",
                 "Bob Davis",
-                5.00,
+                Decimal("5.00"),
             ),
         ],
         [
@@ -62,7 +62,7 @@ def test_profit_aggregation(spark):
     assert alice_2024["category"] == "Technology"
     assert alice_2024["sub_category"] == "Phones"
     assert alice_2024["customer_name"] == "Alice Brown"
-    assert alice_2024["total_profit"] == Decimal("30.57")
+    assert alice_2024["total_profit"] == Decimal("30.58")
 
     bob_2025 = results[(2025, "CD-10002")]
 
