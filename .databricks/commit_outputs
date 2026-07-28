@@ -11,6 +11,10 @@
 # note that glob patterns are case sensitive
 # more examples can be found here: https://docs.databricks.com/repos/repos-setup.html#patterns-for-a-repo-config-file
 
+# Exclude raw ad-hoc analysis containing customer data
+# !notebooks/Adhoc_Analysis.ipynb
+
+
 # Uncomment the following pattern to include output for all notebooks
-# **
- 
+**
+
